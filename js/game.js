@@ -7,6 +7,10 @@ function resizeCanvas() {
 }
 
 resizeCanvas();
+//window.addEventListener("resize", resizeCanvas);
+
+//canvas.width = 800;
+//canvas.height = 600;
 
 const image = new Image();
 image.src = "images/sky.png";
@@ -21,8 +25,10 @@ image.onload = () => {
 
 const ctx = canvas.getContext("2d");
 
+const heroImgs = ["images/HeroSnail.png", "images/woshell.png"];
+let heroImgIndex = 0;
 const heroImg = new Image();
-heroImg.src = "images/HeroSnail.png";
+heroImg.src = heroImgs[heroImgIndex];
 heroImg.onload = function() {
   let heroX = 0;
   let heroY = canvas.height / 2;
@@ -37,18 +43,22 @@ heroImg.onload = function() {
   let speed = 2;
   let score=0;
   let greenyFrequency = 0.02;
+  let planktonFrequency=0.007;
+  let lives = 3;
 
  const obstacleImg = new Image();
   obstacleImg.src = "images/greeny.png";
   let obstacleX = canvas.width;
   let obstacleY = Math.floor(Math.random() * (canvas.height - obstacleImg.height));
+  const obstacles = [];
  
   const planktonImg = new Image();
-planktonImg.src = 'images/plankton.png';
-
-  const obstacles = [];
+  planktonImg.src = 'images/spikyT.png';
   const enemies = [];
 
+  const livesImg = new Image();
+  livesImg.src = "images/lives.png";
+  
 
 
 function createObstacle() {
@@ -60,11 +70,9 @@ function createObstacle() {
 }
 function createPlankton() {
     const plankton = {
-      x: canvas.width + planktonImg.width,
-      y: canvas.height - planktonImg.height - 100,
-      width: planktonImg.width,
-      height: planktonImg.height,
-      speed: 5,
+        x: canvas.width,
+        y: Math.floor(Math.random() * (canvas.height - planktonImg.height/4)),
+     speed:3,
     };
     enemies.push(plankton);
   }
@@ -83,31 +91,36 @@ function drawEnemies() {
     }
   }
 
-function updateObstacles() {
+  function updateObstacles() {
     for (let i = 0; i < obstacles.length; i++) {
-      const obstacle = obstacles[i];
-      obstacle.x -= 5;
-      if (obstacle.x < -obstacleImg.width) {
-        obstacles.splice(i, 1);
-        i--;
-      } else {
-        // Check collision with hero
-        const heroRadius = 75;
-        const greenyRadius = 25;
-        const dx = heroX + heroRadius - (obstacle.x + greenyRadius);
-        const dy = heroY + heroRadius - (obstacle.y + greenyRadius);
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance < heroRadius + greenyRadius) {
-          obstacles.splice(i, 1);
-          i--;
-          score += 10;
+        const obstacle = obstacles[i];
+        obstacle.x -= 5;
+        if (obstacle.x < -obstacleImg.width) {
+            obstacles.splice(i, 1);
+            i--;
+        } else {
+            // Check collision with hero
+            const heroRadius = 75;
+            const greenyRadius = 25;
+            const dx = heroX + heroRadius - (obstacle.x + greenyRadius);
+            const dy = heroY + heroRadius - (obstacle.y + greenyRadius);
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < heroRadius + greenyRadius) {
+                obstacles.splice(i, 1);
+                i--;
+                lives--;
+                score += 10;
+
+                // Remove resize event listener after collision
+                window.removeEventListener('resize', resizeCanvas);
+            }
         }
-      }
     }
     if (greenyFrequency > Math.random()) {
-      createObstacle();
+        createObstacle();
     }
-  }
+}
+
 
   function updateEnemies() {
     for (let i = 0; i < enemies.length; i++) {
@@ -117,12 +130,15 @@ function updateObstacles() {
         enemies.splice(i, 1);
         i--;
       } else {
-        const heroRadius = 75;
+        const heroRadius =75 ;
         const enemyRadius = 25;
         const dx = heroX + heroRadius - (enemy.x + enemyRadius);
         const dy = heroY + heroRadius - (enemy.y + enemyRadius);
         const distance = Math.sqrt(dx * dx + dy * dy);
+        
+
         if (distance < heroRadius + enemyRadius) {
+            heroImg.src = 'images/woshell.png';
           enemies.splice(i, 1);
           i--;
           score -= 10; // Subtract 10 points for hitting an enemy
@@ -137,6 +153,48 @@ function updateObstacles() {
   function drawHero() {
     ctx.drawImage(heroImg, heroX, heroY, 175, 175);
   }
+
+  
+function drawLives() {
+    context.drawImage(livesImg, canvas.width - 130, 20, 25, 25);
+    context.fillText("x " + lives, canvas.width - 95, 40);
+  }
+  
+  function updateLives() {
+    if (score > 0 && score % 50 === 0) {
+      lives++;
+    }
+  
+    if (enemies.length > 0) {
+      const enemy = enemies[0];
+      const heroRadius = 75;
+      const enemyRadius = 25;
+      const dx = heroX + heroRadius - (enemy.x + enemyRadius);
+      const dy = heroY + heroRadius - (enemy.y + enemyRadius);
+      const distance = Math.sqrt(dx * dx + dy * dy);
+  
+      if (distance < heroRadius + enemyRadius) {
+        if (heroImg.src.endsWith("HeroSnail.png")) {
+          heroImg.src = "images/woshell.png";
+        } else if (lives === 3) {
+          lives--;
+          heroImg.src = "images/HeroSnail.png";
+        } else if (lives === 2) {
+          lives--;
+          heroImg.src = "images/HeroSnail1.png";
+        } else {
+          lives--;
+          isGameOver = true;
+        }
+      }
+    }
+  }
+  
+  function draw() {
+    if (isGameOver) {
+      context.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
+      return;
+    }}
 
   function updateGame() {
     
@@ -154,7 +212,13 @@ function updateObstacles() {
 
     updateObstacles();
 
-    drawEnemies()
+    drawEnemies();
+
+    updateEnemies();
+
+    drawLives();
+
+  updateLives();   
     
     
     
