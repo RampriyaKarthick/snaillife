@@ -59,7 +59,12 @@ planktonImg.src = 'images/spikyT.png';
   const livesImg = new Image();
   livesImg.src = "images/lives.png";
   
+  const restartBtn = document.getElementById("restart-btn");
 
+  restartBtn.addEventListener("click", function() {
+    resetGame();
+  });
+  
 
 function createObstacle() {
   const obstacle = {
@@ -117,43 +122,91 @@ function updateObstacles() {
     }
   }
 
- function updateEnemies() {
-  for (let i = 0; i < enemies.length; i++) {
-    const enemy = enemies[i];
-    enemy.x -= enemy.speed;
-    if (enemy.x < -planktonImg.width) {
-      enemies.splice(i, 1);
-      i--;
-    } else {
-      const heroRadius = 75;
-      const enemyRadius = 75;
-      const dx = heroX + heroRadius - (enemy.x + enemyRadius);
-      const dy = heroY + heroRadius - (enemy.y + enemyRadius);
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      if (distance < heroRadius + enemyRadius) {
-        if (heroImg.src.endsWith("HeroSnail.png")) {
-          heroImg.src = "images/woshell.png";
-        } //else if (heroImg.src.endsWith("woshell.png")) 
-        
-          if (lives === 3 ) {
+  let numCollisions = 0;
+
+  function updateEnemies() {
+    for (let i = 0; i < enemies.length; i++) {
+      const enemy = enemies[i];
+      enemy.x -= enemy.speed;
+      if (enemy.x < -planktonImg.width) {
+        enemies.splice(i, 1);
+        i--;
+        score += 5;
+      } else {
+        const heroRadius = 75;
+        const enemyRadius = 75;
+        const dx = heroX + heroRadius - (enemy.x + enemyRadius);
+        const dy = heroY + heroRadius - (enemy.y + enemyRadius);
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < heroRadius + enemyRadius) {
+          if (heroImg.src.endsWith("HeroSnail.png") || heroImg.src.endsWith("woshell.png")) {
             lives--;
-            alert("Two lives left");
-          } else if (lives === 2) {
-            lives--;
-            alert("One life left");
-          } else {
-            isGameOver = true;
-            alert("Game over!");
+            if (lives <= 0) {
+              isGameOver = true;
+              ctx.fillStyle = "black";
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.font = "25px Arial";
+              ctx.fillStyle = "white";
+              ctx.textAlign = "center";
+              ctx.fillText(`Game Over! Your score is ${score}`, canvas.width/2, canvas.height/2);
+              return;
+            } else if (lives === 1) {
+              alert("One life left");
+            } else if (lives === 2) {
+              alert("Two lives left");
+            }
+            numCollisions++;
+            score += -5;
           }
+          enemies.splice(i, 1);
+          i--;
+          
         }
       }
-    
-}
+    }
+  
     if (planktonFrequency > Math.random()) {
       createPlankton();
     }
   }
-
+  
+  function drawHero() {
+    ctx.drawImage(heroImg, heroX, heroY, 175, 175);
+  }
+  
+  function drawLives() {
+    context.drawImage(livesImg, canvas.width - 130, 20, 25, 25);
+    context.fillText("x " + lives, canvas.width - 95, 40);
+  }
+  
+  function updateLives() {
+    if (score > 0 && score % 50 === 0) {
+      lives++;
+    }
+  }
+  
+  function draw() {
+    if (isGameOver) {
+      context.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
+      restartBtn.style.display = "block";
+      return;
+    }
+    // Otherwise, continue drawing game elements
+    context.drawImage(image, -canvasX, 0, canvasWidth, canvas.height);
+    context.drawImage(image, canvasWidth - canvasX, 0, canvasWidth, canvas.height);
+    drawHero();
+    drawObstacles();
+    updateObstacles();
+    drawEnemies();
+    updateEnemies();
+    drawScore();
+    drawLives();
+  }
+  
+  
+  
+  
+  
   
 
   function drawHero() {
@@ -165,15 +218,42 @@ function updateObstacles() {
     context.fillText("x " + lives, canvas.width - 95, 40);
   }
 
+  let lastLifeUpdateScore = 0;
+
   function updateLives() {
-    if (score > 0 && score % 50 === 0) {
+    if (score > lastLifeUpdateScore && score % 50 === 0 && lives < 3) {
       lives++;
-    }}
+      lastLifeUpdateScore = score;
+    }
+  }
     function draw() {
         if (isGameOver) {
           context.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
           return;
+
+          restartBtn.style.display = isGameOver ? "block" : "none";
         }}
+
+        function resetGame() {
+          // Reset variables
+          score = 0;
+          lives = 3;
+          numCollisions = 0;
+          isGameOver = false;
+          enemies = [];
+        
+          // Reset hero image
+          heroImg.src = "images/HeroSnail.png";
+        
+          // Clear canvas
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+          // Redraw game elements
+          drawScore();
+          drawLives();
+          drawHero();
+        }
+        
   function updateGame() {
     
     // Clear canvas
