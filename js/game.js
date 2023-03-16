@@ -156,7 +156,9 @@ function updateObstacles() {
 
   let isTransformed = false;
   let initialScore = 0 ;
- let woshellScore = 0;
+  let newscore=0;
+  let woshellScore=0;
+ 
   
  function updateEnemies() {
 
@@ -167,8 +169,8 @@ function updateObstacles() {
       enemies.splice(i, 1);
       i--;
       initialScore += 5;
-      woshellScore += 5;
-      let newscore=initialScore+woshellScore;
+    
+      newscore=initialScore+woshellScore;
     } else {
       const heroRadius = 75;
       const enemyRadius = 75;
@@ -179,7 +181,7 @@ function updateObstacles() {
         if (heroImg.src.endsWith("HeroSnail.png")) {
           if (!isTransformed) {
             heroImg.src = "images/woshell.png";
-            woshellScore += newScore;
+           // woshellScore = newScore;
             isTransformed = true;
             lives--;
             alert("Two lives left");
@@ -227,6 +229,7 @@ function updateObstacles() {
   function drawLives() {
     
     context.fillText("x " + lives, canvas.width - 95, 40);
+    context.fillText("x " + lives, canvas.width - 95, 40);
   }
   
   function updateLives() {
@@ -265,21 +268,6 @@ function updateObstacles() {
     drawScore();
     drawLives();
     
-  }
-  
-  
-  
-  
-  
-  
-
-  function drawHero() {
-    ctx.drawImage(heroImg, heroX, heroY, 175, 175);
-  }
-
-  function drawLives() {
-    context.drawImage(livesImg, canvas.width - 130, 20, 25, 25);
-    context.fillText("x " + lives, canvas.width - 95, 40);
   }
 
   let lastLifeUpdateScore = 0;
