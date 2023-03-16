@@ -156,7 +156,6 @@ function updateObstacles() {
 
   let isTransformed = false;
   let initialScore = 0 ;
-  let newscore=0;
   let woshellScore=0;
  
   
