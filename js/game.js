@@ -1,3 +1,14 @@
+function startGame() {
+  // Hide title container and show canvas
+  const titleContainer = document.querySelector('.title-container');
+  const canvas = document.getElementById('game-canvas');
+  titleContainer.style.display = 'none';
+  canvas.style.display = 'block';
+
+  // Start the game
+  initialize();
+}
+
 const canvas = document.getElementById("game-canvas");
 const context = canvas.getContext("2d");
 
@@ -58,14 +69,8 @@ planktonImg.src = 'images/spikyT.png';
 
   const livesImg = new Image();
   livesImg.src = "images/lives.png";
-  
-  const restartBtn = document.getElementById("restart-btn");
 
-  restartBtn.addEventListener("click", function() {
-    resetGame();
-  });
   
-
 function createObstacle() {
   const obstacle = {
     x: canvas.width,
@@ -122,8 +127,10 @@ function updateObstacles() {
     }
   }
 
-  let numCollisions = 0;
-
+  let isTransformed = false;
+  let initialScore = 0 ;
+ let woshellScore = 0;
+  
   function updateEnemies() {
     for (let i = 0; i < enemies.length; i++) {
       const enemy = enemies[i];
@@ -132,6 +139,7 @@ function updateObstacles() {
         enemies.splice(i, 1);
         i--;
         score += 5;
+        woshellScore += 5;
       } else {
         const heroRadius = 75;
         const enemyRadius = 75;
@@ -139,28 +147,34 @@ function updateObstacles() {
         const dy = heroY + heroRadius - (enemy.y + enemyRadius);
         const distance = Math.sqrt(dx * dx + dy * dy);
         if (distance < heroRadius + enemyRadius) {
-          if (heroImg.src.endsWith("HeroSnail.png") || heroImg.src.endsWith("woshell.png")) {
-            lives--;
-            if (lives <= 0) {
-              isGameOver = true;
-              ctx.fillStyle = "black";
-              ctx.fillRect(0, 0, canvas.width, canvas.height);
-              ctx.font = "25px Arial";
-              ctx.fillStyle = "white";
-              ctx.textAlign = "center";
-              ctx.fillText(`Game Over! Your score is ${score}`, canvas.width/2, canvas.height/2);
-              return;
-            } else if (lives === 1) {
-              alert("One life left");
-            } else if (lives === 2) {
+          if (heroImg.src.endsWith("HeroSnail.png")) {
+            if (!isTransformed) {
+              heroImg.src = "images/woshell.png";
+              initialScore += score;
+              isTransformed = true;
+              lives--;
               alert("Two lives left");
+              drawLives();
             }
-            numCollisions++;
-            score += -5;
+          } else {
+            lives--;
+            drawLives();
+          }
+          if (lives <= 0) {
+            isGameOver = true;
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = "25px Arial";
+            ctx.fillStyle = "white";
+            ctx.textAlign = "center";
+            ctx.fillText(`Game Over! Your score is ${score}`, canvas.width/2, canvas.height/2);
+            return;
+          } else if (lives === 1) {
+            alert("One life left");
+            drawLives();
           }
           enemies.splice(i, 1);
           i--;
-          
         }
       }
     }
@@ -168,40 +182,53 @@ function updateObstacles() {
     if (planktonFrequency > Math.random()) {
       createPlankton();
     }
+  
+    if (isTransformed) {
+      score = initialScore + woshellScore;
+    }
   }
+  
   
   function drawHero() {
     ctx.drawImage(heroImg, heroX, heroY, 175, 175);
   }
   
   function drawLives() {
-    context.drawImage(livesImg, canvas.width - 130, 20, 25, 25);
+    
     context.fillText("x " + lives, canvas.width - 95, 40);
   }
   
   function updateLives() {
     if (score > 0 && score % 50 === 0) {
       lives++;
+      alert(`Two lives left. Your current score is ${score}`);
     }
+    drawLives();
   }
+  
   
   function draw() {
     if (isGameOver) {
+      // Display game over text
       context.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
-      restartBtn.style.display = "block";
-      return;
+  
+      // Display game over screen
+      const gameOverScreen = document.getElementById('game-over');
+      const finalScore = document.getElementById('final-score');
+      finalScore.textContent = score;
+      gameOverScreen.style.display = 'block';
+    } else {
+      // Draw game elements
+      drawHero();
+      drawObstacles();
+      updateObstacles();
+      drawEnemies();
+      updateEnemies();
+      drawScore();
+      drawLives();
     }
-    // Otherwise, continue drawing game elements
-    context.drawImage(image, -canvasX, 0, canvasWidth, canvas.height);
-    context.drawImage(image, canvasWidth - canvasX, 0, canvasWidth, canvas.height);
-    drawHero();
-    drawObstacles();
-    updateObstacles();
-    drawEnemies();
-    updateEnemies();
-    drawScore();
-    drawLives();
   }
+  
   
   
   
@@ -226,34 +253,7 @@ function updateObstacles() {
       lastLifeUpdateScore = score;
     }
   }
-    function draw() {
-        if (isGameOver) {
-          context.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
-          return;
-
-          restartBtn.style.display = isGameOver ? "block" : "none";
-        }}
-
-        function resetGame() {
-          // Reset variables
-          score = 0;
-          lives = 3;
-          numCollisions = 0;
-          isGameOver = false;
-          enemies = [];
-        
-          // Reset hero image
-          heroImg.src = "images/HeroSnail.png";
-        
-          // Clear canvas
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-          // Redraw game elements
-          drawScore();
-          drawLives();
-          drawHero();
-        }
-        
+         
   function updateGame() {
     
     // Clear canvas
