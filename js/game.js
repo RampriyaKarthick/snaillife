@@ -5,9 +5,33 @@ function startGame() {
   titleContainer.style.display = 'none';
   canvas.style.display = 'block';
 
+  // Play music
+  const audio = new Audio('music/gameLevel.wav');
+  audio.loop = true;
+  audio.play();
+
+  const gameOverSound = new Audio('music/planktonCollision.wav');
+
+  let isAudioOn = true; // variable to track audio state
+  
+  // toggle audio state when 'm' key is pressed
+  document.addEventListener('keydown', function(event) {
+    if (event.code === 'KeyM') {
+      if (isAudioOn) {
+        audio.pause();
+        gameOverSound.pause();
+        isAudioOn = false;
+      } else {
+        audio.play();
+        isAudioOn = true;
+      }
+    }
+  });
+
   // Start the game
   initialize();
 }
+
 
 const canvas = document.getElementById("game-canvas");
 const context = canvas.getContext("2d");
@@ -102,6 +126,9 @@ function drawEnemies() {
   }
 
 function updateObstacles() {
+
+ 
+
     for (let i = 0; i < obstacles.length; i++) {
       const obstacle = obstacles[i];
       obstacle.x -= 5;
@@ -131,62 +158,66 @@ function updateObstacles() {
   let initialScore = 0 ;
  let woshellScore = 0;
   
-  function updateEnemies() {
-    for (let i = 0; i < enemies.length; i++) {
-      const enemy = enemies[i];
-      enemy.x -= enemy.speed;
-      if (enemy.x < -planktonImg.width) {
+ function updateEnemies() {
+
+  for (let i = 0; i < enemies.length; i++) {
+    const enemy = enemies[i];
+    enemy.x -= enemy.speed;
+    if (enemy.x < -planktonImg.width) {
+      enemies.splice(i, 1);
+      i--;
+      initialScore += 5;
+      woshellScore += 5;
+      let newscore=initialScore+woshellScore;
+    } else {
+      const heroRadius = 75;
+      const enemyRadius = 75;
+      const dx = heroX + heroRadius - (enemy.x + enemyRadius);
+      const dy = heroY + heroRadius - (enemy.y + enemyRadius);
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance < heroRadius + enemyRadius) {
+        if (heroImg.src.endsWith("HeroSnail.png")) {
+          if (!isTransformed) {
+            heroImg.src = "images/woshell.png";
+            woshellScore += newScore;
+            isTransformed = true;
+            lives--;
+            alert("Two lives left");
+            
+          }
+        } else {
+          lives--;
+          score -= 5;
+        }
+        if (lives <= 0) {
+          isGameOver = true;
+          ctx.fillStyle = "black";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.font = "25px Arial";
+          ctx.fillStyle = "white";
+          ctx.textAlign = "center";
+          ctx.fillText(`Game Over! Your score is ${score}`, canvas.width/2, canvas.height/2);
+          return;
+        } else if (lives === 1) {
+          alert("One life left");
+      
+        }
+        updateLives();
         enemies.splice(i, 1);
         i--;
-        score += 5;
-        woshellScore += 5;
-      } else {
-        const heroRadius = 75;
-        const enemyRadius = 75;
-        const dx = heroX + heroRadius - (enemy.x + enemyRadius);
-        const dy = heroY + heroRadius - (enemy.y + enemyRadius);
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance < heroRadius + enemyRadius) {
-          if (heroImg.src.endsWith("HeroSnail.png")) {
-            if (!isTransformed) {
-              heroImg.src = "images/woshell.png";
-              initialScore += score;
-              isTransformed = true;
-              lives--;
-              alert("Two lives left");
-              drawLives();
-            }
-          } else {
-            lives--;
-            drawLives();
-          }
-          if (lives <= 0) {
-            isGameOver = true;
-            ctx.fillStyle = "black";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.font = "25px Arial";
-            ctx.fillStyle = "white";
-            ctx.textAlign = "center";
-            ctx.fillText(`Game Over! Your score is ${score}`, canvas.width/2, canvas.height/2);
-            return;
-          } else if (lives === 1) {
-            alert("One life left");
-            drawLives();
-          }
-          enemies.splice(i, 1);
-          i--;
-        }
       }
     }
-  
-    if (planktonFrequency > Math.random()) {
-      createPlankton();
-    }
-  
-    if (isTransformed) {
-      score = initialScore + woshellScore;
-    }
   }
+
+  if (planktonFrequency > Math.random()) {
+    createPlankton();
+  }
+
+  if (isTransformed) {
+    score = initialScore + woshellScore;
+  }
+}
+
   
   
   function drawHero() {
@@ -209,26 +240,32 @@ function updateObstacles() {
   
   function draw() {
     if (isGameOver) {
-      // Display game over text
-      context.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
-  
-      // Display game over screen
-      const gameOverScreen = document.getElementById('game-over');
-      const finalScore = document.getElementById('final-score');
-      finalScore.textContent = score;
-      gameOverScreen.style.display = 'block';
-    } else {
-      // Draw game elements
-      drawHero();
-      drawObstacles();
-      updateObstacles();
-      drawEnemies();
-      updateEnemies();
-      drawScore();
-      drawLives();
+
+     
+       
+    
+        // Display game over screen and restart button
+        const gameOverScreen = document.getElementById('game-over');
+        const finalScore = document.getElementById('final-score');
+        finalScore.textContent = score;
+        gameOverScreen.style.display = 'block';
+    
+        const restartButton = document.getElementById('restart-btn');
+        restartButton.style.display = 'block';
+        restartButton.addEventListener('click', startGame);
+    
+        
+
     }
+    drawHero();
+    drawObstacles();
+    updateObstacles();
+    drawEnemies();
+    updateEnemies();
+    drawScore();
+    drawLives();
+    
   }
-  
   
   
   
@@ -250,9 +287,16 @@ function updateObstacles() {
   function updateLives() {
     if (score > lastLifeUpdateScore && score % 50 === 0 && lives < 3) {
       lives++;
-      lastLifeUpdateScore = score;
+      //lastLifeUpdateScore = score;
     }
   }
+    function draw() {
+        if (isGameOver) {
+          context.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
+          return;
+
+        }}
+
          
   function updateGame() {
     
