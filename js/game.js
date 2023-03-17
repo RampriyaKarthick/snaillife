@@ -156,41 +156,32 @@ function updateObstacles() {
 
   let isTransformed = false;
   let initialScore = 0 ;
-  let woshellScore=0;
  
   
  function updateEnemies() {
-
   for (let i = 0; i < enemies.length; i++) {
     const enemy = enemies[i];
     enemy.x -= enemy.speed;
     if (enemy.x < -planktonImg.width) {
       enemies.splice(i, 1);
       i--;
-      initialScore += 5;
-    
-      newscore=initialScore+woshellScore;
+      score += 5;
     } else {
       const heroRadius = 75;
       const enemyRadius = 75;
       const dx = heroX + heroRadius - (enemy.x + enemyRadius);
       const dy = heroY + heroRadius - (enemy.y + enemyRadius);
       const distance = Math.sqrt(dx * dx + dy * dy);
+      const maxDy = canvas.height - heroRadius - enemyRadius;
+if (dy > maxDy) {
+  dy = maxDy;
+} else if (dy < -maxDy) {
+  dy = -maxDy;
+}
       if (distance < heroRadius + enemyRadius) {
-        if (heroImg.src.endsWith("HeroSnail.png")) {
-          if (!isTransformed) {
-            heroImg.src = "images/woshell.png";
-           // woshellScore = newScore;
-            isTransformed = true;
-            lives--;
-            alert("Two lives left");
-            
-          }
-        } else {
-          lives--;
-          score -= 5;
-        }
-        if (lives <= 0) {
+        lives--;
+        score -= 5;
+        if (lives === 0) {
           isGameOver = true;
           ctx.fillStyle = "black";
           ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -201,7 +192,8 @@ function updateObstacles() {
           return;
         } else if (lives === 1) {
           alert("One life left");
-      
+        } else if (lives === 2) {
+          alert("Two lives left");
         }
         updateLives();
         enemies.splice(i, 1);
@@ -213,10 +205,6 @@ function updateObstacles() {
   if (planktonFrequency > Math.random()) {
     createPlankton();
   }
-
-  if (isTransformed) {
-    score = initialScore + woshellScore;
-  }
 }
 
   
@@ -227,7 +215,6 @@ function updateObstacles() {
   
   function drawLives() {
     
-    context.fillText("x " + lives, canvas.width - 95, 40);
     context.fillText("x " + lives, canvas.width - 95, 40);
   }
   
@@ -268,22 +255,20 @@ function updateObstacles() {
     drawLives();
     
   }
-
-  let lastLifeUpdateScore = 0;
+  
+  
+  
+ function drawLives() {
+    context.drawImage(livesImg, canvas.width - 130, 20, 25, 25);
+    context.fillText("x " + lives, canvas.width - 95, 40);
+  }
 
   function updateLives() {
-    if (score > lastLifeUpdateScore && score % 50 === 0 && lives < 3) {
+    if (score % 50 === 0 && lives < 3) {
       lives++;
-      //lastLifeUpdateScore = score;
+
     }
   }
-    function draw() {
-        if (isGameOver) {
-          context.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
-          return;
-
-        }}
-
          
   function updateGame() {
     
